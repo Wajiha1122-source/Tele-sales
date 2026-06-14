@@ -4,7 +4,7 @@ import { titleize } from "../lib/api";
 export function Card({ title, action, children, className = "" }) {
   return (
     <section className={`card group ${className}`}>
-      {(title || action) && <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">{title}</h2>{action}</div>}
+      {(title || action) && <div className="mb-4 flex min-w-0 items-center justify-between gap-3"><h2 className="min-w-0 font-bold">{title}</h2>{action}</div>}
       {children}
     </section>
   );

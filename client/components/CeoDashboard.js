@@ -60,8 +60,8 @@ export default function CeoDashboard() {
       </header>
     </Reveal>
 
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {cards.map(({ label, value, icon: Icon, detail }, index) => <Reveal key={label} delay={index * 70} variant="scale"><Card className="metric-glow h-full"><div className="mb-6 flex items-center justify-between"><div className="grid h-11 w-11 place-items-center rounded-2xl bg-violet-100 text-violet-700 transition duration-300 group-hover:rotate-3"><Icon size={20} /></div><Sparkles size={16} className="text-violet-200" /></div><div className="text-4xl font-black tracking-[-.04em] text-violet-950"><AnimatedNumber value={value} /></div><div className="mt-1 text-sm font-semibold text-slate-600">{label}</div><div className="mt-3 text-xs text-slate-400">{detail}</div></Card></Reveal>)}
+    <div className="ceo-metrics mb-6 grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+      {cards.map(({ label, value, icon: Icon, detail }, index) => <Reveal key={label} className="min-w-0" delay={index * 70} variant="scale"><Card className="metric-glow ceo-metric-card h-full"><div className="mb-3 flex items-center justify-between sm:mb-6"><div className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-700 transition duration-300 group-hover:rotate-3 sm:h-11 sm:w-11 sm:rounded-2xl"><Icon size={18} /></div><Sparkles size={14} className="hidden text-violet-200 sm:block" /></div><div className="text-3xl font-black tracking-[-.04em] text-violet-950 sm:text-4xl"><AnimatedNumber value={value} /></div><div className="mt-1 text-xs font-semibold text-slate-600 sm:text-sm">{label}</div><div className="mt-1 truncate text-[10px] text-slate-400 sm:mt-3 sm:text-xs">{detail}</div></Card></Reveal>)}
     </div>
 
     <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
@@ -88,13 +88,13 @@ export default function CeoDashboard() {
       </Card></Reveal>
     </div>
 
-    <div className="mt-5 grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-      <Reveal><Card title="Executive performance - last 30 days">
-        <div className="overflow-x-auto"><table className="w-full"><thead><tr><th>Executive</th><th>Reports</th><th>Calls</th><th>Contacts</th><th>Leads</th></tr></thead><tbody>{data.performance.map((person) => <tr key={person.id}><td className="font-bold text-violet-950">{person.name}</td><td>{person.reports}</td><td>{person.calls}</td><td>{person.contacts}</td><td>{person.leads}</td></tr>)}</tbody></table></div>
+    <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
+      <Reveal className="min-w-0"><Card className="min-w-0" title="Executive performance - last 30 days">
+        <div className="ceo-table-scroll w-full max-w-full overflow-x-auto"><table className="min-w-[34rem] w-full"><thead><tr><th>Executive</th><th>Reports</th><th>Calls</th><th>Contacts</th><th>Leads</th></tr></thead><tbody>{data.performance.map((person) => <tr key={person.id}><td className="font-bold text-violet-950">{person.name}</td><td>{person.reports}</td><td>{person.calls}</td><td>{person.contacts}</td><td>{person.leads}</td></tr>)}</tbody></table></div>
       </Card></Reveal>
 
-      <Reveal delay={100}><Card title="Recent reports" action={<button onClick={() => router.push("/reports")} className="text-xs font-bold text-violet-700">Review all</button>}>
-        <div className="space-y-3">{reports.slice(0, 5).map((report) => <button key={report.id} onClick={() => router.push("/reports")} className="group flex w-full items-center justify-between rounded-xl bg-violet-50/60 p-3 text-left transition hover:translate-x-1 hover:bg-violet-100"><div><div className="text-sm font-bold text-violet-950">{report.executive_name}</div><div className="text-xs text-slate-500">{new Date(report.date).toLocaleDateString()} - {report.total_calls} calls</div></div><ArrowRight size={16} className="text-violet-400 transition group-hover:translate-x-1" /></button>)}</div>
+      <Reveal className="min-w-0" delay={100}><Card className="min-w-0" title="Recent reports" action={<button onClick={() => router.push("/reports")} className="shrink-0 text-xs font-bold text-violet-700">Review all</button>}>
+        <div className="min-w-0 space-y-3">{reports.slice(0, 5).map((report) => <button key={report.id} onClick={() => router.push("/reports")} className="group flex w-full min-w-0 items-center justify-between gap-3 rounded-xl bg-violet-50/60 p-3 text-left transition hover:bg-violet-100 sm:hover:translate-x-1"><div className="min-w-0"><div className="truncate text-sm font-bold text-violet-950">{report.executive_name}</div><div className="truncate text-xs text-slate-500">{new Date(report.date).toLocaleDateString()} - {report.total_calls} calls</div></div><ArrowRight size={16} className="shrink-0 text-violet-400 transition group-hover:translate-x-1" /></button>)}</div>
       </Card></Reveal>
     </div>
 

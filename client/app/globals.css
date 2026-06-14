@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { max-width: 100%; overflow-x: clip; scroll-behavior: smooth; }
 body {
+  max-width: 100%;
+  overflow-x: clip;
   color: #1f1530;
   background:
     radial-gradient(circle at 85% 0%, rgba(168, 85, 247, .11), transparent 28rem),
@@ -79,6 +81,9 @@ td { @apply border-t border-slate-100 px-4 py-3 text-sm; }
 .metric-glow { position: relative; isolation: isolate; overflow: hidden; transition: transform .18s ease, filter .18s ease, box-shadow .18s ease; }
 .metric-glow::after { content: ""; position: absolute; inset: auto -30% -75% 20%; height: 8rem; border-radius: 50%; background: #c084fc; filter: blur(38px); opacity: .18; z-index: -1; }
 .metric-glow:hover { transform: translateY(-9px) scale(1.025); filter: saturate(1.18) brightness(1.05); box-shadow: 0 24px 48px rgba(76,29,149,.25); }
+.ceo-table-scroll { scrollbar-width: thin; scrollbar-color: #c4b5fd transparent; overscroll-behavior-x: contain; }
+.ceo-table-scroll::-webkit-scrollbar { height: 6px; }
+.ceo-table-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: #c4b5fd; }
 .progress-track { @apply h-2 overflow-hidden rounded-full bg-violet-100; }
 .progress-value { @apply h-full rounded-full bg-gradient-to-r from-violet-700 via-purple-500 to-fuchsia-400; animation: progressGrow .9s ease-out both; transform-origin: left; }
 .glass-chip { @apply rounded-2xl border border-white/10 bg-white/[.07] p-4 backdrop-blur; transition: transform .16s ease, background-color .16s ease, border-color .16s ease; }
@@ -157,6 +162,12 @@ tbody tr:hover { position: relative; z-index: 2; background: #f7f2ff; transform:
 @keyframes loaderFade { 0%, 86% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes routeSweepLeft { 0% { transform: scaleX(0); } 35% { transform: scaleX(1); } 100% { transform: scaleX(0); transform-origin: right; } }
 @keyframes routeSweepRight { 0% { transform: scaleX(0); } 35% { transform: scaleX(1); } 100% { transform: scaleX(0); transform-origin: left; } }
+
+@media (max-width: 639px) {
+  .ceo-metric-card { padding: .85rem; border-radius: 1rem; }
+  .ceo-metrics .reveal { transition-delay: 0ms !important; }
+  .ceo-table-scroll th, .ceo-table-scroll td { padding-left: .75rem; padding-right: .75rem; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
