@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://tele-sales.onrender.com";
 
 export async function api(path, options = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;

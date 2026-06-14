@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "npm run build -w server && npm run build -w client",
-    "lint": "npm run lint -w server && npm run lint -w client"
+    "lint": "npm run lint -w server && npm run lint -w client",
+    "start": "npm run start -w server"
   },
   "overrides": {
     "postcss": "^8.5.10"
