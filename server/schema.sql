@@ -1,0 +1,131 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('EXECUTIVE', 'MANAGER', 'CEO');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE lead_status AS ENUM ('NEW', 'CONTACTED', 'IN_PROGRESS', 'PROPOSAL_SENT', 'NEGOTIATION', 'CONVERTED', 'LOST', 'NO_RESPONSE');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE activity_type AS ENUM ('COLD_CALL', 'FOLLOW_UP_CALL', 'WHATSAPP_MESSAGE', 'EMAIL_SENT', 'MEETING');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE activity_result AS ENUM ('NO_ANSWER', 'BUSY', 'INTERESTED', 'NOT_INTERESTED', 'CALL_BACK_LATER');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE remark_target AS ENUM ('LEAD', 'REPORT');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role user_role NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS daily_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  executive_id UUID NOT NULL REFERENCES users(id),
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  total_calls INTEGER NOT NULL DEFAULT 0 CHECK (total_calls >= 0),
+  contacts_reached INTEGER NOT NULL DEFAULT 0 CHECK (contacts_reached >= 0),
+  interested_count INTEGER NOT NULL DEFAULT 0 CHECK (interested_count >= 0),
+  meetings_scheduled INTEGER NOT NULL DEFAULT 0 CHECK (meetings_scheduled >= 0),
+  remarks TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (executive_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS daily_activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_id UUID NOT NULL REFERENCES daily_reports(id) ON DELETE CASCADE,
+  time TIME NOT NULL,
+  company_name VARCHAR(180) NOT NULL,
+  contact_person VARCHAR(150) NOT NULL,
+  phone VARCHAR(40),
+  activity_type activity_type NOT NULL,
+  result activity_result NOT NULL,
+  remarks TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_name VARCHAR(180) NOT NULL,
+  contact_person VARCHAR(150) NOT NULL,
+  phone VARCHAR(40),
+  whatsapp VARCHAR(40),
+  email VARCHAR(255),
+  city VARCHAR(100),
+  industry VARCHAR(120),
+  lead_source VARCHAR(120),
+  notes TEXT,
+  status lead_status NOT NULL DEFAULT 'NEW',
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lead_followups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id UUID NOT NULL REFERENCES leads(id),
+  manager_id UUID NOT NULL REFERENCES users(id),
+  date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  notes TEXT NOT NULL,
+  status_update lead_status NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ceo_remarks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type remark_target NOT NULL,
+  target_id UUID NOT NULL,
+  remark_text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_by UUID NOT NULL REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS lead_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id UUID NOT NULL REFERENCES leads(id),
+  event_type VARCHAR(40) NOT NULL,
+  description TEXT NOT NULL,
+  from_status lead_status,
+  to_status lead_status,
+  actor_id UUID NOT NULL REFERENCES users(id),
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  actor_id UUID REFERENCES users(id),
+  action VARCHAR(80) NOT NULL,
+  entity_type VARCHAR(40) NOT NULL,
+  entity_id UUID,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_date ON daily_reports(date DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_report ON daily_activities(report_id);
+CREATE INDEX IF NOT EXISTS idx_leads_status_created ON leads(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_created_by ON leads(created_by);
+CREATE INDEX IF NOT EXISTS idx_followups_lead ON lead_followups(lead_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_remarks_target ON ceo_remarks(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_events_lead ON lead_events(lead_id, created_at DESC);
+
+CREATE OR REPLACE FUNCTION reject_ceo_remark_mutation()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'CEO remarks are immutable';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS ceo_remarks_immutable_update ON ceo_remarks;
+CREATE TRIGGER ceo_remarks_immutable_update
+BEFORE UPDATE OR DELETE ON ceo_remarks
+FOR EACH ROW EXECUTE FUNCTION reject_ceo_remark_mutation();
