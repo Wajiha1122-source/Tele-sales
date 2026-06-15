@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, FileBarChart, Printer, RefreshCw, ShieldCheck } from "lucide-react";
+import { CalendarDays, Download, FileBarChart, Printer, RefreshCw, ShieldCheck } from "lucide-react";
 import Shell from "../../components/Shell";
 import Reveal from "../../components/Reveal";
 import { Button, Notice, Status } from "../../components/ui";
 import { useSession } from "../../hooks/useSession";
 import { api, titleize } from "../../lib/api";
+import { downloadReportPdf } from "../../lib/reportPdf";
 
 const isoDate = (date) => {
   const offset = date.getTimezoneOffset();
@@ -133,7 +134,22 @@ export default function ReportCenterPage() {
         <div className="grid gap-4 xl:grid-cols-[auto_1fr_auto] xl:items-end">
           <div><label>Quick ranges</label><div className="flex flex-wrap gap-2">{[["today", "Today"], ["weekly", "Weekly"], ["monthly", "Monthly"]].map(([value, label]) => <button key={value} type="button" onClick={() => applyPreset(value)} className="btn-secondary">{label}</button>)}</div></div>
           <div className="grid gap-3 sm:grid-cols-2"><div><label>Start date</label><input type="date" value={range.startDate} onChange={(event) => setRange({ ...range, startDate: event.target.value, label: "Custom range" })} /></div><div><label>End date</label><input type="date" value={range.endDate} onChange={(event) => setRange({ ...range, endDate: event.target.value, label: "Custom range" })} /></div></div>
-          <div className="flex gap-2"><Button loading={loading} onClick={() => generate(range)} className="btn-primary"><RefreshCw size={16} />Generate</Button><button type="button" onClick={() => window.print()} disabled={!report} className="btn-secondary"><Printer size={16} />Print / PDF</button></div>
+          <div className="flex flex-wrap gap-2">
+            <Button loading={loading} onClick={() => generate(range)} className="btn-primary">
+              <RefreshCw size={16} />Generate
+            </Button>
+            <button type="button" onClick={() => window.print()} disabled={!report} className="btn-secondary">
+              <Printer size={16} />Print
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadReportPdf(report, rangeLabel)}
+              disabled={!report}
+              className="btn-secondary"
+            >
+              <Download size={16} />Download PDF
+            </button>
+          </div>
         </div>
       </section></Reveal>
       <Notice message={message} error />

@@ -16,13 +16,15 @@ dashboardRouter.get("/summary", authorize("MANAGER", "CEO"), asyncHandler(async 
       COALESCE(SUM(contacts_reached),0)::int contacts,
       COALESCE(SUM(meetings_scheduled),0)::int meetings FROM daily_reports WHERE date=CURRENT_DATE`),
     query(`SELECT u.id,u.name,
-      COUNT(DISTINCT r.id)::int reports,
-      COALESCE(SUM(r.total_calls),0)::int calls,
-      COALESCE(SUM(r.contacts_reached),0)::int contacts,
-      COUNT(DISTINCT l.id)::int leads
-     FROM users u LEFT JOIN daily_reports r ON r.executive_id=u.id AND r.date>=CURRENT_DATE-INTERVAL '30 days'
-     LEFT JOIN leads l ON l.created_by=u.id AND l.created_at>=CURRENT_DATE-INTERVAL '30 days'
-     WHERE u.role='EXECUTIVE' GROUP BY u.id,u.name ORDER BY calls DESC`)
+      (SELECT COUNT(*)::int FROM daily_reports r
+       WHERE r.executive_id=u.id AND r.date>=CURRENT_DATE-INTERVAL '30 days') reports,
+      (SELECT COALESCE(SUM(r.total_calls),0)::int FROM daily_reports r
+       WHERE r.executive_id=u.id AND r.date>=CURRENT_DATE-INTERVAL '30 days') calls,
+      (SELECT COALESCE(SUM(r.contacts_reached),0)::int FROM daily_reports r
+       WHERE r.executive_id=u.id AND r.date>=CURRENT_DATE-INTERVAL '30 days') contacts,
+      (SELECT COUNT(*)::int FROM leads l
+       WHERE l.created_by=u.id AND l.created_at>=CURRENT_DATE-INTERVAL '30 days') leads
+     FROM users u WHERE u.role='EXECUTIVE' ORDER BY calls DESC`)
   ]);
   res.json({ leads: leadStats.rows[0], today: reportsToday.rows[0], performance: performance.rows });
 }));
