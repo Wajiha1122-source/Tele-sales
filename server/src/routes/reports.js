@@ -1,10 +1,82 @@
 import { Router } from "express";
 import { query, transaction } from "../db/index.js";
 import { asyncHandler, AppError, validate } from "../lib/http.js";
-import { reportSchema } from "../lib/schemas.js";
+import { reportRangeSchema, reportSchema } from "../lib/schemas.js";
 import { authorize } from "../middleware/auth.js";
 
 export const reportsRouter = Router();
+
+reportsRouter.get("/generate", authorize("MANAGER", "CEO"), validate(reportRangeSchema, "query"), asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.validatedQuery;
+  const params = [startDate, endDate];
+  const [summary, reports, activities, leads, executives] = await Promise.all([
+    query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM daily_reports WHERE date BETWEEN $1::date AND $2::date) reports,
+         (SELECT COUNT(*)::int FROM daily_activities WHERE date BETWEEN $1::date AND $2::date) activities,
+         (SELECT COUNT(*)::int FROM leads WHERE created_at::date BETWEEN $1::date AND $2::date) leads,
+         (SELECT COALESCE(SUM(total_calls),0)::int FROM daily_reports WHERE date BETWEEN $1::date AND $2::date) calls,
+         (SELECT COALESCE(SUM(contacts_reached),0)::int FROM daily_reports WHERE date BETWEEN $1::date AND $2::date) contacts,
+         (SELECT COALESCE(SUM(interested_count),0)::int FROM daily_reports WHERE date BETWEEN $1::date AND $2::date) interested,
+         (SELECT COALESCE(SUM(meetings_scheduled),0)::int FROM daily_reports WHERE date BETWEEN $1::date AND $2::date) meetings,
+         (SELECT COUNT(*)::int FROM leads WHERE status='CONVERTED' AND created_at::date BETWEEN $1::date AND $2::date) converted`,
+      params
+    ),
+    query(
+      `SELECT r.id,r.date,u.name executive_name,r.total_calls,r.contacts_reached,
+         r.interested_count,r.meetings_scheduled,r.remarks,
+         COUNT(a.id)::int activity_count
+       FROM daily_reports r
+       JOIN users u ON u.id=r.executive_id
+       LEFT JOIN daily_activities a ON a.executive_id=r.executive_id AND a.date=r.date
+       WHERE r.date BETWEEN $1::date AND $2::date
+       GROUP BY r.id,u.name
+       ORDER BY r.date DESC,u.name`,
+      params
+    ),
+    query(
+      `SELECT a.id,a.date,a.time,u.name executive_name,a.company_name,a.contact_person,
+         a.phone,a.activity_type,a.result,a.remarks
+       FROM daily_activities a
+       JOIN users u ON u.id=a.executive_id
+       WHERE a.date BETWEEN $1::date AND $2::date
+       ORDER BY a.date DESC,a.time DESC,a.created_at DESC`,
+      params
+    ),
+    query(
+      `SELECT l.id,l.created_at,u.name executive_name,l.company_name,l.contact_person,
+         l.phone,l.whatsapp,l.email,l.city,l.industry,l.lead_source,l.status,l.notes
+       FROM leads l
+       JOIN users u ON u.id=l.created_by
+       WHERE l.created_at::date BETWEEN $1::date AND $2::date
+       ORDER BY l.created_at DESC`,
+      params
+    ),
+    query(
+      `SELECT u.name,
+         (SELECT COUNT(*)::int FROM daily_reports r WHERE r.executive_id=u.id AND r.date BETWEEN $1::date AND $2::date) reports,
+         (SELECT COUNT(*)::int FROM daily_activities a WHERE a.executive_id=u.id AND a.date BETWEEN $1::date AND $2::date) activities,
+         (SELECT COUNT(*)::int FROM leads l WHERE l.created_by=u.id AND l.created_at::date BETWEEN $1::date AND $2::date) leads,
+         (SELECT COALESCE(SUM(r.total_calls),0)::int FROM daily_reports r WHERE r.executive_id=u.id AND r.date BETWEEN $1::date AND $2::date) calls
+       FROM users u
+       WHERE u.role='EXECUTIVE'
+       ORDER BY activities DESC,leads DESC`,
+      params
+    )
+  ]);
+
+  res.json({
+    company: "Irshad & Company",
+    range: { startDate, endDate },
+    generatedAt: new Date().toISOString(),
+    generatedBy: { id: req.user.id, name: req.user.name, role: req.user.role },
+    summary: summary.rows[0],
+    executiveSummary: executives.rows,
+    dailyReports: reports.rows,
+    activities: activities.rows,
+    leads: leads.rows
+  });
+}));
 
 reportsRouter.post("/create", authorize("EXECUTIVE"), validate(reportSchema), asyncHandler(async (req, res) => {
   const b = req.body;

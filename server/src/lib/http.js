@@ -15,7 +15,8 @@ export function validate(schema, source = "body") {
     if (!parsed.success) {
       return next(new AppError(400, "Validation failed", parsed.error.flatten()));
     }
-    req[source] = parsed.data;
+    if (source === "query") req.validatedQuery = parsed.data;
+    else req[source] = parsed.data;
     next();
   };
 }

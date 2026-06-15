@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, ClipboardList, Crown, LogOut, Sparkles, Target, Users } from "lucide-react";
+import { BarChart3, ClipboardList, Crown, FileBarChart, LogOut, Sparkles, Target, Users } from "lucide-react";
 import RouteTransition from "./RouteTransition";
 
 export default function Shell({ user, children }) {
@@ -13,12 +13,14 @@ export default function Shell({ user, children }) {
     ],
     MANAGER: [
       { href: "/dashboard", label: "Lead desk", icon: BarChart3 },
-      { href: "/leads", label: "Manage leads", icon: Target }
+      { href: "/leads", label: "Manage leads", icon: Target },
+      { href: "/report-center", label: "Generate report", icon: FileBarChart }
     ],
     CEO: [
       { href: "/dashboard", label: "Executive overview", icon: Crown },
       { href: "/leads", label: "All leads", icon: Target },
-      { href: "/reports", label: "Reports & remarks", icon: Users }
+      { href: "/reports", label: "Reports & remarks", icon: Users },
+      { href: "/report-center", label: "Generate report", icon: FileBarChart }
     ]
   }[user.role];
   const logout = () => { localStorage.clear(); router.push("/"); };

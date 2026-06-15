@@ -24,6 +24,14 @@ export const reportSchema = z.object({
   meetingsScheduled: z.coerce.number().int().min(0),
   remarks: z.string().max(4000).optional().default("")
 });
+const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD format");
+export const reportRangeSchema = z.object({
+  startDate: dateString,
+  endDate: dateString
+}).refine(({ startDate, endDate }) => startDate <= endDate, {
+  message: "Start date must be on or before end date",
+  path: ["endDate"]
+});
 export const activitySchema = z.object({
   time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
   companyName: z.string().trim().min(1).max(180),
