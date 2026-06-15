@@ -31,7 +31,11 @@ export default function ExecutiveWorkspace() {
   const today = new Date().toISOString().slice(0, 10);
 
   const load = useCallback(async () => {
-    const [reports, mine] = await Promise.all([api("/reports/my"), api("/leads/my")]);
+    const [reports, mine, todayActivities] = await Promise.all([
+      api("/reports/my"),
+      api("/leads/my"),
+      api("/activities/my-today")
+    ]);
     const current = reports.find((item) => item.date.slice(0, 10) === today);
     if (current) {
       setReportId(current.id);
@@ -42,8 +46,8 @@ export default function ExecutiveWorkspace() {
         meetingsScheduled: current.meetings_scheduled,
         remarks: current.remarks || ""
       });
-      setActivities(await api(`/activities/by-report/${current.id}`));
     }
+    setActivities(todayActivities);
     setLeads(mine.slice(0, 8));
   }, [today]);
 
@@ -70,11 +74,10 @@ export default function ExecutiveWorkspace() {
 
   const saveActivity = async (event) => {
     event.preventDefault();
-    if (!reportId) return setNotice("Save today's report first.");
     setBusy("activity");
     try {
       const path = activityEditId ? `/activities/${activityEditId}` : "/activities/add";
-      await api(path, { method: activityEditId ? "PUT" : "POST", body: JSON.stringify({ ...activity, reportId }) });
+      await api(path, { method: activityEditId ? "PUT" : "POST", body: JSON.stringify(activity) });
       setNotice(activityEditId ? "Activity updated." : "Activity added.");
       setActivity(freshActivity());
       setActivityEditId("");

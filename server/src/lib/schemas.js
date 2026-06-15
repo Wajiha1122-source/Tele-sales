@@ -30,7 +30,6 @@ export const reportSchema = z.object({
   remarks: z.string().max(4000).optional().default("")
 });
 export const activitySchema = z.object({
-  reportId: z.string().uuid(),
   time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
   companyName: z.string().trim().min(1).max(180),
   contactPerson: z.string().trim().min(1).max(150),

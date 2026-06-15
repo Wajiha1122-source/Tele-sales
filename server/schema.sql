@@ -41,7 +41,9 @@ CREATE TABLE IF NOT EXISTS daily_reports (
 
 CREATE TABLE IF NOT EXISTS daily_activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  report_id UUID NOT NULL REFERENCES daily_reports(id) ON DELETE CASCADE,
+  report_id UUID REFERENCES daily_reports(id) ON DELETE SET NULL,
+  executive_id UUID NOT NULL REFERENCES users(id),
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
   time TIME NOT NULL,
   company_name VARCHAR(180) NOT NULL,
   contact_person VARCHAR(150) NOT NULL,
@@ -51,6 +53,17 @@ CREATE TABLE IF NOT EXISTS daily_activities (
   remarks TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE daily_activities ADD COLUMN IF NOT EXISTS executive_id UUID REFERENCES users(id);
+ALTER TABLE daily_activities ADD COLUMN IF NOT EXISTS date DATE;
+UPDATE daily_activities a
+SET executive_id = r.executive_id, date = r.date
+FROM daily_reports r
+WHERE a.report_id = r.id AND (a.executive_id IS NULL OR a.date IS NULL);
+ALTER TABLE daily_activities ALTER COLUMN executive_id SET NOT NULL;
+ALTER TABLE daily_activities ALTER COLUMN date SET DEFAULT CURRENT_DATE;
+ALTER TABLE daily_activities ALTER COLUMN date SET NOT NULL;
+ALTER TABLE daily_activities ALTER COLUMN report_id DROP NOT NULL;
 
 CREATE TABLE IF NOT EXISTS leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -112,6 +125,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE INDEX IF NOT EXISTS idx_reports_date ON daily_reports(date DESC);
 CREATE INDEX IF NOT EXISTS idx_activities_report ON daily_activities(report_id);
+CREATE INDEX IF NOT EXISTS idx_activities_executive_date ON daily_activities(executive_id, date DESC, time DESC);
 CREATE INDEX IF NOT EXISTS idx_leads_status_created ON leads(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_leads_created_by ON leads(created_by);
 CREATE INDEX IF NOT EXISTS idx_followups_lead ON lead_followups(lead_id, date DESC);
