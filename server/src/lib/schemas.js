@@ -6,11 +6,6 @@ const optionalText = (max) => z.preprocess(
   (value) => typeof value === "string" ? value.trim() : value,
   z.string().max(max).optional().default("")
 );
-const optionalEmail = z.preprocess(
-  (value) => typeof value === "string" ? value.trim() : value,
-  z.union([z.string().email("Enter a valid email address"), z.literal("")]).optional().default("")
-);
-
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8)
@@ -43,7 +38,7 @@ export const leadSchema = z.object({
   contactPerson: z.string().trim().min(1).max(150),
   phone: optionalText(40),
   whatsapp: optionalText(40),
-  email: optionalEmail,
+  email: optionalText(255),
   city: optionalText(100),
   industry: optionalText(120),
   leadSource: optionalText(120),

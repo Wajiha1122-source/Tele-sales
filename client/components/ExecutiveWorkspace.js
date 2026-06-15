@@ -240,7 +240,7 @@ export default function ExecutiveWorkspace() {
             <div><label>Contact person *</label><input required {...field(lead, setLead, "contactPerson")} /></div>
             <div><label>Phone</label><input {...field(lead, setLead, "phone")} /></div>
             <div><label>WhatsApp</label><input {...field(lead, setLead, "whatsapp")} /></div>
-            <div><label>Email</label><input type="email" {...field(lead, setLead, "email")} /></div>
+            <div><label>Email or website</label><input {...field(lead, setLead, "email")} placeholder="Email address or website link" /></div>
             <div><label>City</label><input {...field(lead, setLead, "city")} /></div>
             <div><label>Industry</label><input {...field(lead, setLead, "industry")} /></div>
             <div><label>Source</label><input {...field(lead, setLead, "leadSource")} /></div>
