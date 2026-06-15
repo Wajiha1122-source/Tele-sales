@@ -34,8 +34,10 @@ activitiesRouter.put("/:id", authorize("EXECUTIVE"), validate(activitySchema), a
 
 activitiesRouter.get("/my-today", authorize("EXECUTIVE"), asyncHandler(async (req, res) => {
   const { rows } = await query(
-    `SELECT * FROM daily_activities
-     WHERE executive_id=$1 AND date=CURRENT_DATE
+    `SELECT a.*,r.ceo_viewed_at,(r.ceo_viewed_at IS NULL) AS can_delete
+     FROM daily_activities a
+     LEFT JOIN daily_reports r ON r.executive_id=a.executive_id AND r.date=a.date
+     WHERE a.executive_id=$1 AND a.date=CURRENT_DATE
      ORDER BY time DESC, created_at DESC`,
     [req.user.id]
   );
@@ -50,6 +52,14 @@ activitiesRouter.get("/by-report/:id", asyncHandler(async (req, res) => {
   const params = req.user.role === "EXECUTIVE" ? [req.params.id, req.user.id] : [req.params.id];
   const report = await query(`SELECT r.id,r.executive_id,r.date FROM daily_reports r WHERE r.id=$1 ${ownerCheck}`, params);
   if (!report.rows[0]) throw new AppError(404, "Report not found");
+  if (req.user.role === "CEO") {
+    await query(
+      `UPDATE daily_reports
+       SET ceo_viewed_at=COALESCE(ceo_viewed_at,NOW()),ceo_viewed_by=COALESCE(ceo_viewed_by,$2)
+       WHERE id=$1`,
+      [req.params.id, req.user.id]
+    );
+  }
   const { rows } = await query(
     `SELECT * FROM daily_activities
      WHERE report_id=$1 OR (executive_id=$2 AND date=$3)
@@ -57,4 +67,29 @@ activitiesRouter.get("/by-report/:id", asyncHandler(async (req, res) => {
     [req.params.id, report.rows[0].executive_id, report.rows[0].date]
   );
   res.json(rows);
+}));
+
+activitiesRouter.delete("/:id", authorize("EXECUTIVE"), asyncHandler(async (req, res) => {
+  const { rows } = await query(
+    `DELETE FROM daily_activities a
+     WHERE a.id=$1 AND a.executive_id=$2 AND a.date=CURRENT_DATE
+       AND NOT EXISTS (
+         SELECT 1 FROM daily_reports r
+         WHERE r.executive_id=a.executive_id AND r.date=a.date AND r.ceo_viewed_at IS NOT NULL
+       )
+     RETURNING a.id`,
+    [req.params.id, req.user.id]
+  );
+  if (!rows[0]) {
+    const existing = await query(
+      `SELECT a.date,r.ceo_viewed_at FROM daily_activities a
+       LEFT JOIN daily_reports r ON r.executive_id=a.executive_id AND r.date=a.date
+       WHERE a.id=$1 AND a.executive_id=$2`,
+      [req.params.id, req.user.id]
+    );
+    if (!existing.rows[0]) throw new AppError(404, "Activity not found");
+    if (existing.rows[0].ceo_viewed_at) throw new AppError(409, "This activity is locked because the CEO has viewed the daily report");
+    throw new AppError(403, "Only today's activities can be deleted");
+  }
+  res.json({ message: "Activity deleted" });
 }));

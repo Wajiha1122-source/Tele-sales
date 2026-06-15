@@ -34,10 +34,15 @@ CREATE TABLE IF NOT EXISTS daily_reports (
   interested_count INTEGER NOT NULL DEFAULT 0 CHECK (interested_count >= 0),
   meetings_scheduled INTEGER NOT NULL DEFAULT 0 CHECK (meetings_scheduled >= 0),
   remarks TEXT,
+  ceo_viewed_at TIMESTAMPTZ,
+  ceo_viewed_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (executive_id, date)
 );
+
+ALTER TABLE daily_reports ADD COLUMN IF NOT EXISTS ceo_viewed_at TIMESTAMPTZ;
+ALTER TABLE daily_reports ADD COLUMN IF NOT EXISTS ceo_viewed_by UUID REFERENCES users(id);
 
 CREATE TABLE IF NOT EXISTS daily_activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,6 +69,10 @@ ALTER TABLE daily_activities ALTER COLUMN executive_id SET NOT NULL;
 ALTER TABLE daily_activities ALTER COLUMN date SET DEFAULT CURRENT_DATE;
 ALTER TABLE daily_activities ALTER COLUMN date SET NOT NULL;
 ALTER TABLE daily_activities ALTER COLUMN report_id DROP NOT NULL;
+ALTER TABLE daily_activities DROP CONSTRAINT IF EXISTS daily_activities_report_id_fkey;
+ALTER TABLE daily_activities
+  ADD CONSTRAINT daily_activities_report_id_fkey
+  FOREIGN KEY (report_id) REFERENCES daily_reports(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

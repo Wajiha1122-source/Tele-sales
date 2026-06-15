@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Clock3, Lock, Pencil, Plus, RotateCcw, Save, Sparkles, Zap } from "lucide-react";
+import { Clock3, Lock, Pencil, Plus, RotateCcw, Save, Sparkles, Trash2, Zap } from "lucide-react";
 import { api, titleize } from "../lib/api";
 import { Button, Card, Notice, Status } from "./ui";
 import Reveal from "./Reveal";
@@ -20,6 +20,7 @@ const emptyLead = { companyName: "", contactPerson: "", phone: "", whatsapp: "",
 export default function ExecutiveWorkspace() {
   const [report, setReport] = useState(emptyReport);
   const [reportId, setReportId] = useState("");
+  const [reportViewed, setReportViewed] = useState(false);
   const [activity, setActivity] = useState(freshActivity);
   const [activityEditId, setActivityEditId] = useState("");
   const [lead, setLead] = useState(emptyLead);
@@ -39,6 +40,7 @@ export default function ExecutiveWorkspace() {
     const current = reports.find((item) => item.date.slice(0, 10) === today);
     if (current) {
       setReportId(current.id);
+      setReportViewed(Boolean(current.ceo_viewed_at));
       setReport({
         totalCalls: current.total_calls,
         contactsReached: current.contacts_reached,
@@ -46,6 +48,10 @@ export default function ExecutiveWorkspace() {
         meetingsScheduled: current.meetings_scheduled,
         remarks: current.remarks || ""
       });
+    } else {
+      setReportId("");
+      setReportViewed(false);
+      setReport(emptyReport);
     }
     setActivities(todayActivities);
     setLeads(mine.slice(0, 8));
@@ -67,6 +73,24 @@ export default function ExecutiveWorkspace() {
       setNotice("Today's report is saved.");
     } catch (error) {
       setNotice(error.message);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const deleteReport = async () => {
+    if (!reportId || !window.confirm("Delete today's daily report? Your quick activities will remain.")) return;
+    setBusy("delete-report");
+    try {
+      await api(`/reports/${reportId}`, { method: "DELETE" });
+      setReportId("");
+      setReportViewed(false);
+      setReport(emptyReport);
+      setNotice("Today's report deleted. Quick activities were kept.");
+      await load();
+    } catch (error) {
+      setNotice(error.message);
+      await load();
     } finally {
       setBusy("");
     }
@@ -106,6 +130,22 @@ export default function ExecutiveWorkspace() {
   const resetActivity = () => {
     setActivityEditId("");
     setActivity(freshActivity());
+  };
+
+  const deleteActivity = async (item) => {
+    if (!window.confirm(`Delete the activity for ${item.company_name}?`)) return;
+    setBusy(`delete-activity-${item.id}`);
+    try {
+      await api(`/activities/${item.id}`, { method: "DELETE" });
+      if (activityEditId === item.id) resetActivity();
+      setNotice("Activity deleted.");
+      await load();
+    } catch (error) {
+      setNotice(error.message);
+      await load();
+    } finally {
+      setBusy("");
+    }
   };
 
   const saveLead = async (event) => {
@@ -162,16 +202,19 @@ export default function ExecutiveWorkspace() {
       </div>
     </header></Reveal>
 
-    <Notice message={notice} error={notice && !notice.includes("saved") && !notice.includes("added") && !notice.includes("created") && !notice.includes("updated")} />
+    <Notice message={notice} error={notice && !notice.includes("saved") && !notice.includes("added") && !notice.includes("created") && !notice.includes("updated") && !notice.includes("deleted")} />
 
     <div className="grid gap-5 xl:grid-cols-2">
-      <Reveal variant="left"><Card title="Daily totals" action={<span className="badge bg-violet-100 text-violet-800">{reportId ? "Saved" : "Not saved"}</span>}>
+      <Reveal variant="left"><Card title="Daily totals" action={<span className={`badge ${reportViewed ? "bg-slate-100 text-slate-600" : "bg-violet-100 text-violet-800"}`}>{reportViewed ? "Locked after CEO review" : reportId ? "Saved" : "Not saved"}</span>}>
         <form onSubmit={saveReport}>
           <div className="grid grid-cols-2 gap-3">
             {[["totalCalls", "Calls made"], ["contactsReached", "Contacts reached"], ["interestedCount", "Interested"], ["meetingsScheduled", "Meetings"]].map(([name, label]) => <div key={name}><label>{label}</label><input type="number" min="0" {...field(report, setReport, name)} /></div>)}
           </div>
           <div className="mt-3"><label>General remarks</label><textarea rows="2" {...field(report, setReport, "remarks")} placeholder="Anything leadership should know?" /></div>
           <Button loading={busy === "report"} className="btn-primary mt-3 w-full"><Save size={16} />Save today&apos;s report</Button>
+          {reportId && (reportViewed
+            ? <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500"><Lock size={14} />Deletion disabled after CEO review</div>
+            : <Button type="button" loading={busy === "delete-report"} onClick={deleteReport} className="btn mt-3 w-full bg-rose-50 text-rose-700 hover:bg-rose-100"><Trash2 size={16} />Delete today&apos;s report</Button>)}
         </form>
       </Card></Reveal>
 
@@ -208,7 +251,7 @@ export default function ExecutiveWorkspace() {
       </Card></Reveal>
 
       <Reveal delay={150}><Card title={`Today's activity (${activities.length})`}>
-        <div className="max-h-[25rem] space-y-3 overflow-auto pr-1">{activities.length ? activities.map((item) => <div key={item.id} className="group flex items-start gap-3 rounded-2xl border border-violet-100/70 bg-violet-50/60 p-3.5 transition hover:border-violet-300 hover:bg-white hover:shadow-card"><span className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-violet-600 shadow-sm">{item.time.slice(0, 5)}</span><div className="min-w-0 flex-1"><div className="text-sm font-bold text-violet-950">{item.company_name} - {item.contact_person}</div><div className="mt-1 text-xs text-slate-500">{titleize(item.activity_type)} - {titleize(item.result)}</div>{item.remarks && <p className="mt-2 truncate text-xs text-slate-400">{item.remarks}</p>}</div><button onClick={() => editActivity(item)} className="grid h-8 w-8 place-items-center rounded-lg text-violet-500 opacity-70 transition hover:bg-violet-100 hover:opacity-100" aria-label={`Edit activity for ${item.company_name}`}><Pencil size={15} /></button></div>) : <p className="text-sm text-slate-400">No activities logged yet.</p>}</div>
+        <div className="max-h-[25rem] space-y-3 overflow-auto pr-1">{activities.length ? activities.map((item) => <div key={item.id} className="group flex items-start gap-3 rounded-2xl border border-violet-100/70 bg-violet-50/60 p-3.5 transition hover:border-violet-300 hover:bg-white hover:shadow-card"><span className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-violet-600 shadow-sm">{item.time.slice(0, 5)}</span><div className="min-w-0 flex-1"><div className="text-sm font-bold text-violet-950">{item.company_name} - {item.contact_person}</div><div className="mt-1 text-xs text-slate-500">{titleize(item.activity_type)} - {titleize(item.result)}</div>{item.remarks && <p className="mt-2 truncate text-xs text-slate-400">{item.remarks}</p>}</div><div className="flex shrink-0 gap-1"><button onClick={() => editActivity(item)} className="grid h-8 w-8 place-items-center rounded-lg text-violet-500 opacity-70 transition hover:bg-violet-100 hover:opacity-100" aria-label={`Edit activity for ${item.company_name}`}><Pencil size={15} /></button>{item.can_delete ? <button disabled={busy === `delete-activity-${item.id}`} onClick={() => deleteActivity(item)} className="grid h-8 w-8 place-items-center rounded-lg text-rose-500 opacity-70 transition hover:bg-rose-100 hover:opacity-100 disabled:opacity-40" aria-label={`Delete activity for ${item.company_name}`}><Trash2 size={15} /></button> : <span className="grid h-8 w-8 place-items-center text-slate-400" title="Locked after CEO review"><Lock size={14} /></span>}</div></div>) : <p className="text-sm text-slate-400">No activities logged yet.</p>}</div>
       </Card></Reveal>
     </div>
 

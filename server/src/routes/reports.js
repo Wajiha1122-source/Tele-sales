@@ -47,3 +47,22 @@ reportsRouter.get("/all", authorize("CEO"), asyncHandler(async (req, res) => {
   );
   res.json(rows);
 }));
+
+reportsRouter.delete("/:id", authorize("EXECUTIVE"), asyncHandler(async (req, res) => {
+  const { rows } = await query(
+    `DELETE FROM daily_reports
+     WHERE id=$1 AND executive_id=$2 AND date=CURRENT_DATE AND ceo_viewed_at IS NULL
+     RETURNING id`,
+    [req.params.id, req.user.id]
+  );
+  if (!rows[0]) {
+    const existing = await query(
+      "SELECT date,ceo_viewed_at FROM daily_reports WHERE id=$1 AND executive_id=$2",
+      [req.params.id, req.user.id]
+    );
+    if (!existing.rows[0]) throw new AppError(404, "Report not found");
+    if (existing.rows[0].ceo_viewed_at) throw new AppError(409, "This report is locked because the CEO has viewed it");
+    throw new AppError(403, "Only today's report can be deleted");
+  }
+  res.json({ message: "Today's report deleted" });
+}));
