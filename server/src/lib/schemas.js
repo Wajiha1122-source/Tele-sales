@@ -30,7 +30,7 @@ export const activitySchema = z.object({
   contactPerson: z.string().trim().min(1).max(150),
   phone: z.string().max(40).optional().default(""),
   activityType: z.enum(["COLD_CALL", "FOLLOW_UP_CALL", "WHATSAPP_MESSAGE", "EMAIL_SENT", "MEETING"]),
-  result: z.enum(["NO_ANSWER", "BUSY", "INTERESTED", "NOT_INTERESTED", "CALL_BACK_LATER"]),
+  result: z.enum(["ANSWER", "NO_ANSWER", "BUSY", "INTERESTED", "NOT_INTERESTED", "CALL_BACK_LATER"]),
   remarks: z.string().max(2000).optional().default("")
 });
 export const leadSchema = z.object({

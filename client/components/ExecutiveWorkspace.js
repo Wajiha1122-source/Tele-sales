@@ -226,7 +226,7 @@ export default function ExecutiveWorkspace() {
             <div><label>Contact</label><input required {...field(activity, setActivity, "contactPerson")} /></div>
             <div><label>Phone</label><input {...field(activity, setActivity, "phone")} /></div>
             <div><label>Activity</label><select {...field(activity, setActivity, "activityType")}>{["COLD_CALL", "FOLLOW_UP_CALL", "WHATSAPP_MESSAGE", "EMAIL_SENT", "MEETING"].map((value) => <option key={value} value={value}>{titleize(value)}</option>)}</select></div>
-            <div><label>Result</label><select {...field(activity, setActivity, "result")}>{["NO_ANSWER", "BUSY", "INTERESTED", "NOT_INTERESTED", "CALL_BACK_LATER"].map((value) => <option key={value} value={value}>{titleize(value)}</option>)}</select></div>
+            <div><label>Result</label><select {...field(activity, setActivity, "result")}>{["ANSWER", "NO_ANSWER", "BUSY", "INTERESTED", "NOT_INTERESTED", "CALL_BACK_LATER"].map((value) => <option key={value} value={value}>{titleize(value)}</option>)}</select></div>
           </div>
           <div className="mt-3"><label>Remarks</label><input {...field(activity, setActivity, "remarks")} placeholder="Short note" /></div>
           <Button loading={busy === "activity"} className="btn-secondary mt-3 w-full">{activityEditId ? <Save size={16} /> : <Plus size={16} />}{activityEditId ? "Update activity" : "Add activity"}</Button>
