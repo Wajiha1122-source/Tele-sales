@@ -56,11 +56,15 @@ CREATE TABLE IF NOT EXISTS daily_activities (
   activity_type activity_type NOT NULL,
   result activity_result NOT NULL,
   remarks TEXT,
+  ceo_viewed_at TIMESTAMPTZ,
+  ceo_viewed_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE daily_activities ADD COLUMN IF NOT EXISTS executive_id UUID REFERENCES users(id);
 ALTER TABLE daily_activities ADD COLUMN IF NOT EXISTS date DATE;
+ALTER TABLE daily_activities ADD COLUMN IF NOT EXISTS ceo_viewed_at TIMESTAMPTZ;
+ALTER TABLE daily_activities ADD COLUMN IF NOT EXISTS ceo_viewed_by UUID REFERENCES users(id);
 UPDATE daily_activities a
 SET executive_id = r.executive_id, date = r.date
 FROM daily_reports r

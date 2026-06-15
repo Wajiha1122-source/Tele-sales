@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, Crown, Gauge, PhoneCall, Sparkles, TrendingUp, Users } from "lucide-react";
+import { Activity, ArrowRight, BriefcaseBusiness, CheckCircle2, Crown, Gauge, Sparkles, TrendingUp, Users } from "lucide-react";
 import { api, titleize } from "../lib/api";
 import { Card, Notice, Status } from "./ui";
 import Reveal from "./Reveal";
@@ -12,14 +12,16 @@ export default function CeoDashboard() {
   const [data, setData] = useState(null);
   const [reports, setReports] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([api("/dashboard/summary"), api("/reports/all"), api("/leads/all")])
-      .then(([summary, allReports, allLeads]) => {
+    Promise.all([api("/dashboard/summary"), api("/reports/all"), api("/leads/all"), api("/activities/all")])
+      .then(([summary, allReports, allLeads, allActivities]) => {
         setData(summary);
         setReports(allReports);
         setLeads(allLeads);
+        setActivities(allActivities);
       })
       .catch((requestError) => setError(requestError.message));
   }, []);
@@ -33,11 +35,13 @@ export default function CeoDashboard() {
   const pipeline = ["NEW", "CONTACTED", "IN_PROGRESS", "PROPOSAL_SENT", "NEGOTIATION", "CONVERTED"];
   const maxPipeline = Math.max(1, ...pipeline.map((status) => leads.filter((lead) => lead.status === status).length));
   const topExecutive = data.performance[0];
+  const today = new Date().toISOString().slice(0, 10);
+  const activitiesToday = activities.filter((item) => item.date.slice(0, 10) === today);
 
   const cards = [
     { label: "Total leads", value: total, icon: BriefcaseBusiness, detail: `${active} active now` },
     { label: "Converted", value: converted, icon: CheckCircle2, detail: `${conversionRate}% conversion` },
-    { label: "Calls today", value: data.today.calls, icon: PhoneCall, detail: `${data.today.contacts} contacts reached` },
+    { label: "Activities today", value: activitiesToday.length, icon: Activity, detail: `${activitiesToday.filter((item) => item.activity_type.includes("CALL")).length} calls logged` },
     { label: "Reports today", value: data.today.reports, icon: Users, detail: `${data.today.meetings} meetings set` }
   ];
 
@@ -97,6 +101,15 @@ export default function CeoDashboard() {
         <div className="min-w-0 space-y-3">{reports.slice(0, 5).map((report) => <button key={report.id} onClick={() => router.push("/reports")} className="group flex w-full min-w-0 items-center justify-between gap-3 rounded-xl bg-violet-50/60 p-3 text-left transition hover:bg-violet-100 sm:hover:translate-x-1"><div className="min-w-0"><div className="truncate text-sm font-bold text-violet-950">{report.executive_name}</div><div className="truncate text-xs text-slate-500">{new Date(report.date).toLocaleDateString()} - {report.total_calls} calls</div></div><ArrowRight size={16} className="shrink-0 text-violet-400 transition group-hover:translate-x-1" /></button>)}</div>
       </Card></Reveal>
     </div>
+
+    <Reveal className="mt-5"><Card title="Live executive activity" action={<span className="text-xs font-semibold text-violet-500">Latest 100 entries</span>}>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{activities.slice(0, 9).map((item) => <div key={item.id} className="group rounded-2xl border border-violet-100 bg-gradient-to-br from-white to-violet-50/70 p-4 transition duration-200 hover:-translate-y-1 hover:border-violet-300 hover:shadow-card">
+        <div className="mb-3 flex items-start justify-between gap-3"><div className="min-w-0"><div className="truncate font-bold text-violet-950">{item.company_name}</div><div className="truncate text-xs text-slate-400">{item.contact_person}</div></div><span className="shrink-0 rounded-lg bg-violet-100 px-2 py-1 text-xs font-black text-violet-700">{item.time.slice(0, 5)}</span></div>
+        <div className="flex flex-wrap gap-2"><span className="badge bg-fuchsia-100 text-fuchsia-700">{titleize(item.activity_type)}</span><span className="badge bg-slate-100 text-slate-600">{titleize(item.result)}</span></div>
+        <div className="mt-3 flex items-center justify-between gap-3 text-xs"><span className="truncate font-semibold text-violet-700">{item.executive_name}</span><span className={item.report_submitted ? "text-emerald-600" : "text-amber-600"}>{item.report_submitted ? "Report submitted" : "Awaiting report"}</span></div>
+      </div>)}</div>
+      {!activities.length && <div className="rounded-2xl bg-violet-50 p-6 text-sm text-slate-500">No quick activities have been logged yet.</div>}
+    </Card></Reveal>
 
     <Reveal className="mt-5"><Card title="Recent lead movement" action={<button onClick={() => router.push("/leads")} className="text-xs font-bold text-violet-700">Open pipeline</button>}>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{leads.slice(0, 6).map((lead) => <button key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="group rounded-2xl border border-violet-100 p-4 text-left transition duration-300 hover:-translate-y-1 hover:border-violet-300 hover:shadow-card"><div className="mb-3 flex items-start justify-between gap-3"><div className="font-bold text-violet-950">{lead.company_name}</div><Status value={lead.status} /></div><div className="text-sm text-slate-500">{lead.contact_person} - {lead.created_by_name}</div><div className="mt-4 flex items-center gap-1 text-xs font-bold text-violet-600 opacity-0 transition group-hover:opacity-100">Inspect timeline <ArrowRight size={13} /></div></button>)}</div>
