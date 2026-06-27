@@ -19,7 +19,11 @@ export function Status({ value }) {
     NEW: "bg-violet-100 text-violet-800", CONVERTED: "bg-emerald-100 text-emerald-700",
     LOST: "bg-rose-100 text-rose-700", NEGOTIATION: "bg-amber-100 text-amber-700",
     CONTACTED: "bg-blue-100 text-blue-700", IN_PROGRESS: "bg-fuchsia-100 text-fuchsia-700",
-    PROPOSAL_SENT: "bg-indigo-100 text-indigo-700", NO_RESPONSE: "bg-slate-100 text-slate-700"
+    PROPOSAL_SENT: "bg-indigo-100 text-indigo-700", NO_RESPONSE: "bg-slate-100 text-slate-700",
+    QUOTED: "bg-cyan-100 text-cyan-700", PURCHASED: "bg-emerald-100 text-emerald-700",
+    ON_HOLD: "bg-orange-100 text-orange-700", LOW: "bg-slate-100 text-slate-700",
+    NORMAL: "bg-blue-100 text-blue-700", HIGH: "bg-amber-100 text-amber-700",
+    URGENT: "bg-rose-100 text-rose-700"
   };
   return <span className={`badge ${colors[value] || "bg-slate-100 text-slate-700"}`}>{titleize(value)}</span>;
 }

@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, ClipboardList, Crown, FileBarChart, LogOut, Sparkles, Target, Users } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, Crown, FileBarChart, LogOut, MessageSquareText, ShoppingBag, Sparkles, Target, Users } from "lucide-react";
 import RouteTransition from "./RouteTransition";
 
 export default function Shell({ user, children }) {
@@ -9,16 +9,25 @@ export default function Shell({ user, children }) {
   const links = {
     EXECUTIVE: [
       { href: "/dashboard", label: "Daily workspace", icon: ClipboardList },
-      { href: "/leads", label: "My leads", icon: Target }
+      { href: "/leads", label: "My leads", icon: Target },
+      { href: "/purchasers", label: "Purchasers", icon: ShoppingBag },
+      { href: "/messages", label: "Direct messages", icon: MessageSquareText },
+      { href: "/updates", label: "Important updates", icon: Bell }
     ],
     MANAGER: [
       { href: "/dashboard", label: "Lead desk", icon: BarChart3 },
       { href: "/leads", label: "Manage leads", icon: Target },
+      { href: "/purchasers", label: "Purchasers", icon: ShoppingBag },
+      { href: "/messages", label: "Direct messages", icon: MessageSquareText },
+      { href: "/updates", label: "Important updates", icon: Bell },
       { href: "/report-center", label: "Generate report", icon: FileBarChart }
     ],
     CEO: [
       { href: "/dashboard", label: "Executive overview", icon: Crown },
       { href: "/leads", label: "All leads", icon: Target },
+      { href: "/purchasers", label: "Purchasers", icon: ShoppingBag },
+      { href: "/messages", label: "Direct messages", icon: MessageSquareText },
+      { href: "/updates", label: "Important updates", icon: Bell },
       { href: "/reports", label: "Reports & remarks", icon: Users },
       { href: "/report-center", label: "Generate report", icon: FileBarChart }
     ]

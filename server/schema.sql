@@ -16,6 +16,15 @@ ALTER TYPE activity_result ADD VALUE IF NOT EXISTS 'ANSWER' BEFORE 'NO_ANSWER';
 DO $$ BEGIN
   CREATE TYPE remark_target AS ENUM ('LEAD', 'REPORT');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE purchaser_stage AS ENUM ('NEW', 'CONTACTED', 'QUOTED', 'NEGOTIATION', 'PURCHASED', 'ON_HOLD', 'LOST');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE update_priority AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE update_audience AS ENUM ('ALL', 'EXECUTIVE', 'MANAGER', 'CEO');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -137,6 +146,47 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS purchasers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_name VARCHAR(180) NOT NULL,
+  contact_person VARCHAR(150) NOT NULL,
+  phone VARCHAR(40),
+  whatsapp VARCHAR(40),
+  email VARCHAR(255),
+  city VARCHAR(100),
+  product_interest VARCHAR(180),
+  purchase_stage purchaser_stage NOT NULL DEFAULT 'NEW',
+  expected_value NUMERIC(12,2),
+  next_followup_date DATE,
+  notes TEXT,
+  created_by UUID NOT NULL REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS important_updates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(180) NOT NULL,
+  body TEXT NOT NULL,
+  priority update_priority NOT NULL DEFAULT 'NORMAL',
+  audience update_audience NOT NULL DEFAULT 'ALL',
+  pinned BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS direct_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID NOT NULL REFERENCES users(id),
+  recipient_id UUID NOT NULL REFERENCES users(id),
+  body TEXT NOT NULL CHECK (length(trim(body)) > 0),
+  read_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (sender_id <> recipient_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_reports_date ON daily_reports(date DESC);
 CREATE INDEX IF NOT EXISTS idx_activities_report ON daily_activities(report_id);
 CREATE INDEX IF NOT EXISTS idx_activities_executive_date ON daily_activities(executive_id, date DESC, time DESC);
@@ -145,6 +195,12 @@ CREATE INDEX IF NOT EXISTS idx_leads_created_by ON leads(created_by);
 CREATE INDEX IF NOT EXISTS idx_followups_lead ON lead_followups(lead_id, date DESC);
 CREATE INDEX IF NOT EXISTS idx_remarks_target ON ceo_remarks(target_type, target_id);
 CREATE INDEX IF NOT EXISTS idx_events_lead ON lead_events(lead_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_purchasers_stage_updated ON purchasers(purchase_stage, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_purchasers_created_by ON purchasers(created_by);
+CREATE INDEX IF NOT EXISTS idx_important_updates_feed ON important_updates(pinned DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_important_updates_audience ON important_updates(audience);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_sender_recipient ON direct_messages(sender_id, recipient_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_recipient_unread ON direct_messages(recipient_id, read_at) WHERE read_at IS NULL;
 
 CREATE OR REPLACE FUNCTION reject_ceo_remark_mutation()
 RETURNS TRIGGER AS $$

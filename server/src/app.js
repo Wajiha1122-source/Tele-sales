@@ -12,6 +12,9 @@ import { leadsRouter } from "./routes/leads.js";
 import { followupsRouter } from "./routes/followups.js";
 import { remarksRouter } from "./routes/remarks.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+import { purchasersRouter } from "./routes/purchasers.js";
+import { updatesRouter } from "./routes/updates.js";
+import { messagesRouter } from "./routes/messages.js";
 
 export const app = express();
 app.set("trust proxy", 1);
@@ -46,6 +49,9 @@ app.use("/leads", leadsRouter);
 app.use("/followups", followupsRouter);
 app.use("/remarks", remarksRouter);
 app.use("/dashboard", dashboardRouter);
+app.use("/purchasers", purchasersRouter);
+app.use("/updates", updatesRouter);
+app.use("/messages", messagesRouter);
 
 app.use((_req, res) => res.status(404).json({ message: "Route not found" }));
 app.use((error, _req, res, _next) => {

@@ -64,3 +64,27 @@ export const remarkSchema = z.object({
   targetId: z.string().uuid(),
   text: z.string().trim().min(1).max(4000)
 });
+export const purchaserSchema = z.object({
+  companyName: z.string().trim().min(1).max(180),
+  contactPerson: z.string().trim().min(1).max(150),
+  phone: optionalText(40),
+  whatsapp: optionalText(40),
+  email: optionalText(255),
+  city: optionalText(100),
+  productInterest: optionalText(180),
+  purchaseStage: z.enum(["NEW", "CONTACTED", "QUOTED", "NEGOTIATION", "PURCHASED", "ON_HOLD", "LOST"]).default("NEW"),
+  expectedValue: z.coerce.number().min(0).optional().nullable(),
+  nextFollowupDate: dateString.optional().or(z.literal("")).default(""),
+  notes: optionalText(4000)
+});
+export const updateSchema = z.object({
+  title: z.string().trim().min(1).max(180),
+  body: z.string().trim().min(1).max(4000),
+  priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
+  audience: z.enum(["ALL", "EXECUTIVE", "MANAGER", "CEO"]).default("ALL"),
+  pinned: z.boolean().optional().default(false)
+});
+export const directMessageSchema = z.object({
+  recipientId: z.string().uuid(),
+  body: z.string().trim().min(1).max(4000)
+});
