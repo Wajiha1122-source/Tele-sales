@@ -16,6 +16,7 @@ ALTER TYPE activity_result ADD VALUE IF NOT EXISTS 'ANSWER' BEFORE 'NO_ANSWER';
 DO $$ BEGIN
   CREATE TYPE remark_target AS ENUM ('LEAD', 'REPORT');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+ALTER TYPE remark_target ADD VALUE IF NOT EXISTS 'PURCHASER';
 DO $$ BEGIN
   CREATE TYPE purchaser_stage AS ENUM ('NEW', 'CONTACTED', 'QUOTED', 'NEGOTIATION', 'PURCHASED', 'ON_HOLD', 'LOST');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -146,8 +147,17 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS purchaser_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(120) NOT NULL UNIQUE,
+  description TEXT,
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS purchasers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_id UUID REFERENCES purchaser_categories(id),
   company_name VARCHAR(180) NOT NULL,
   contact_person VARCHAR(150) NOT NULL,
   phone VARCHAR(40),
@@ -164,6 +174,8 @@ CREATE TABLE IF NOT EXISTS purchasers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE purchasers ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES purchaser_categories(id);
 
 CREATE TABLE IF NOT EXISTS important_updates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -195,6 +207,8 @@ CREATE INDEX IF NOT EXISTS idx_leads_created_by ON leads(created_by);
 CREATE INDEX IF NOT EXISTS idx_followups_lead ON lead_followups(lead_id, date DESC);
 CREATE INDEX IF NOT EXISTS idx_remarks_target ON ceo_remarks(target_type, target_id);
 CREATE INDEX IF NOT EXISTS idx_events_lead ON lead_events(lead_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_purchaser_categories_name ON purchaser_categories(name);
+CREATE INDEX IF NOT EXISTS idx_purchasers_category_updated ON purchasers(category_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_purchasers_stage_updated ON purchasers(purchase_stage, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_purchasers_created_by ON purchasers(created_by);
 CREATE INDEX IF NOT EXISTS idx_important_updates_feed ON important_updates(pinned DESC, created_at DESC);

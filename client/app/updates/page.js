@@ -19,6 +19,7 @@ export default function UpdatesPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const canManage = ["MANAGER", "CEO"].includes(user?.role);
+  const showFeed = user?.role !== "CEO";
 
   const load = useCallback(() => api("/updates").then(setUpdates).catch((error) => setMessage(error.message)), []);
   useEffect(() => { if (user) load(); }, [user, load]);
@@ -51,8 +52,8 @@ export default function UpdatesPage() {
     </header></Reveal>
     <Notice message={message} error={message && !message.includes("published") && !message.includes("saved")} />
 
-    <div className={`grid gap-5 ${canManage ? "xl:grid-cols-[minmax(0,1fr)_380px]" : ""}`}>
-      <Reveal><Card title="Update feed" action={<Bell size={18} className="text-violet-500" />}>
+    <div className={`grid gap-5 ${canManage && showFeed ? "xl:grid-cols-[minmax(0,1fr)_380px]" : canManage ? "max-w-2xl" : ""}`}>
+      {showFeed && <Reveal><Card title="Update feed" action={<Bell size={18} className="text-violet-500" />}>
         <div className="space-y-3">{updates.map((item) => <article key={item.id} className="rounded-2xl border border-violet-100 bg-white p-4 transition hover:border-violet-300 hover:bg-violet-50/60">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             {item.pinned && <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700"><Pin size={12} />Pinned</span>}
@@ -67,7 +68,7 @@ export default function UpdatesPage() {
           </div>
         </article>)}</div>
         {!updates.length && <div className="rounded-2xl bg-violet-50 p-6 text-sm text-slate-500">No important updates have been published for your role.</div>}
-      </Card></Reveal>
+      </Card></Reveal>}
 
       {canManage && <Reveal delay={100}><Card title={editingId ? "Edit update" : "Publish update"} action={<Plus size={18} className="text-violet-500" />}>
         <form onSubmit={submit} className="space-y-3">

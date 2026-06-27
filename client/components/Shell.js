@@ -17,7 +17,6 @@ export default function Shell({ user, children }) {
     MANAGER: [
       { href: "/dashboard", label: "Lead desk", icon: BarChart3 },
       { href: "/leads", label: "Manage leads", icon: Target },
-      { href: "/purchasers", label: "Purchasers", icon: ShoppingBag },
       { href: "/messages", label: "Direct messages", icon: MessageSquareText },
       { href: "/updates", label: "Important updates", icon: Bell },
       { href: "/report-center", label: "Generate report", icon: FileBarChart }

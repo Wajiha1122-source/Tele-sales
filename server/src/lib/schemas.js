@@ -60,11 +60,16 @@ export const followupSchema = z.object({
 });
 export const statusSchema = z.object({ status: z.enum(statuses) });
 export const remarkSchema = z.object({
-  targetType: z.enum(["LEAD", "REPORT"]),
+  targetType: z.enum(["LEAD", "REPORT", "PURCHASER"]),
   targetId: z.string().uuid(),
   text: z.string().trim().min(1).max(4000)
 });
+export const purchaserCategorySchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  description: optionalText(1000)
+});
 export const purchaserSchema = z.object({
+  categoryId: z.string().uuid(),
   companyName: z.string().trim().min(1).max(180),
   contactPerson: z.string().trim().min(1).max(150),
   phone: optionalText(40),

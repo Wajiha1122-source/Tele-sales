@@ -9,7 +9,12 @@ export const remarksRouter = Router();
 remarksRouter.post("/add", authorize("CEO"), validate(remarkSchema), asyncHandler(async (req, res) => {
   const b = req.body;
   const remark = await transaction(async (client) => {
-    const table = b.targetType === "LEAD" ? "leads" : "daily_reports";
+    const tables = {
+      LEAD: "leads",
+      REPORT: "daily_reports",
+      PURCHASER: "purchasers"
+    };
+    const table = tables[b.targetType];
     const exists = await client.query(`SELECT id FROM ${table} WHERE id=$1`, [b.targetId]);
     if (!exists.rows[0]) throw new AppError(404, `${b.targetType.toLowerCase()} not found`);
     const { rows } = await client.query(
@@ -29,9 +34,12 @@ remarksRouter.post("/add", authorize("CEO"), validate(remarkSchema), asyncHandle
 }));
 
 remarksRouter.get("/:targetId", asyncHandler(async (req, res) => {
+  const params = [req.params.targetId];
+  const targetFilter = req.query.targetType ? "AND r.target_type=$2::remark_target" : "";
+  if (req.query.targetType) params.push(req.query.targetType);
   const { rows } = await query(
     `SELECT r.*,u.name ceo_name FROM ceo_remarks r JOIN users u ON u.id=r.created_by
-     WHERE target_id=$1 ORDER BY created_at DESC`, [req.params.targetId]
+     WHERE target_id=$1 ${targetFilter} ORDER BY created_at DESC`, params
   );
   res.json(rows);
 }));
