@@ -31,15 +31,27 @@ ssoRouter.get("/", asyncHandler(async (req, res) => {
   if (payload.app !== config.sso.appName) fail("app mismatch.", 403);
 
   const { rows } = await query(
-    `SELECT id,name,email,role,is_active
+    `SELECT id,name,email,role
        FROM users
       WHERE LOWER(email)=LOWER($1)
         AND role='CEO'
       LIMIT 1`,
     [config.sso.localCeoUsername]
   );
-  const user = rows[0];
-  if (!user || !user.is_active) fail("mapped CEO/admin user is unavailable.", 403);
+  let user = rows[0];
+
+  if (!user) {
+    const fallback = await query(
+      `SELECT id,name,email,role
+         FROM users
+        WHERE role='CEO'
+        ORDER BY created_at ASC
+        LIMIT 1`
+    );
+    user = fallback.rows[0];
+  }
+
+  if (!user) fail("mapped CEO/admin user is unavailable.", 403);
 
   const appToken = createSessionToken(user);
   const sessionUser = encodeURIComponent(JSON.stringify(createSessionPayload(user)));
