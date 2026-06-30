@@ -65,7 +65,7 @@ Create two Vercel projects from this repository.
 ### API project
 
 - Root directory: `server`
-- Environment variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_URL`, `BOOTSTRAP_ADMIN_KEY`
+- Environment variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_URL`, `BOOTSTRAP_ADMIN_KEY`, `SSO_SECRET`, `SSO_APP_NAME`, `SSO_LOCAL_CEO_USERNAME`, `SSO_REDIRECT_PATH`
 - Run the schema once against Neon with `npm run db:migrate -w server` locally or in a protected CI job.
 
 ### Frontend project

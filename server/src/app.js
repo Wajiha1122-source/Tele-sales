@@ -15,6 +15,7 @@ import { dashboardRouter } from "./routes/dashboard.js";
 import { purchasersRouter } from "./routes/purchasers.js";
 import { updatesRouter } from "./routes/updates.js";
 import { messagesRouter } from "./routes/messages.js";
+import { ssoRouter } from "./routes/sso.js";
 
 export const app = express();
 app.set("trust proxy", 1);
@@ -41,6 +42,7 @@ app.get("/health", async (_req, res) => {
   await pool.query("SELECT 1");
   res.json({ status: "ok", time: new Date().toISOString() });
 });
+app.use("/sso-login", ssoRouter);
 app.use("/auth", authRouter);
 app.use(authenticate);
 app.use("/reports", reportsRouter);

@@ -5,6 +5,7 @@ import { query } from "../db/index.js";
 import { config } from "../config.js";
 import { asyncHandler, AppError, validate } from "../lib/http.js";
 import { loginSchema, registerSchema } from "../lib/schemas.js";
+import { createSessionPayload, createSessionToken } from "../lib/session.js";
 
 export const authRouter = Router();
 
@@ -15,10 +16,7 @@ authRouter.post("/login", validate(loginSchema), asyncHandler(async (req, res) =
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
     throw new AppError(401, "Invalid email or password");
   }
-  const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, config.jwtSecret, {
-    expiresIn: config.jwtExpiresIn
-  });
-  res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  res.json({ token: createSessionToken(user), user: createSessionPayload(user) });
 }));
 
 authRouter.post("/register", validate(registerSchema), asyncHandler(async (req, _res, next) => {

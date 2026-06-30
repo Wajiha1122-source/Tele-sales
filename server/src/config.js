@@ -20,5 +20,16 @@ export const config = {
     ...trustedClientUrls,
     ...(process.env.CLIENT_URL || "").split(",").map((url) => url.trim()).filter(Boolean)
   ])],
-  bootstrapAdminKey: process.env.BOOTSTRAP_ADMIN_KEY
+  clientRedirectUrl: (process.env.CLIENT_URL || trustedClientUrls[0]).split(",")[0].trim(),
+  bootstrapAdminKey: process.env.BOOTSTRAP_ADMIN_KEY,
+  sso: {
+    // Change SSO_SECRET in the environment when rotating the Master Dashboard shared secret.
+    secret: process.env.SSO_SECRET,
+    // Change SSO_APP_NAME to the exact app value sent by the Master Dashboard.
+    appName: process.env.SSO_APP_NAME || "Pulse CRM",
+    // Change SSO_LOCAL_CEO_USERNAME to the mapped local CEO/admin user's email.
+    localCeoUsername: process.env.SSO_LOCAL_CEO_USERNAME || "chmfj@live.com",
+    // Change SSO_REDIRECT_PATH to the CEO/admin dashboard path after SSO login.
+    redirectPath: process.env.SSO_REDIRECT_PATH || "/dashboard"
+  }
 };
