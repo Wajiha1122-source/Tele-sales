@@ -11,6 +11,11 @@ const trustedClientUrls = [
   "https://tele-sales-client.vercel.app"
 ];
 
+const configuredClientUrls = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+
 export const config = {
   port: Number(process.env.PORT || 5000),
   databaseUrl: process.env.DATABASE_URL,
@@ -18,9 +23,9 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
   clientUrls: [...new Set([
     ...trustedClientUrls,
-    ...(process.env.CLIENT_URL || "").split(",").map((url) => url.trim()).filter(Boolean)
+    ...configuredClientUrls
   ])],
-  clientRedirectUrl: (process.env.CLIENT_URL || trustedClientUrls[0]).split(",")[0].trim(),
+  clientRedirectUrl: configuredClientUrls[0] || "",
   bootstrapAdminKey: process.env.BOOTSTRAP_ADMIN_KEY,
   sso: {
     // Change SSO_SECRET in the environment when rotating the Master Dashboard shared secret.

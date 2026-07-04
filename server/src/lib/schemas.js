@@ -60,7 +60,7 @@ export const followupSchema = z.object({
 });
 export const statusSchema = z.object({ status: z.enum(statuses) });
 export const remarkSchema = z.object({
-  targetType: z.enum(["LEAD", "REPORT", "PURCHASER"]),
+  targetType: z.enum(["LEAD", "REPORT", "PURCHASER", "SUPPLIER"]),
   targetId: z.string().uuid(),
   text: z.string().trim().min(1).max(4000)
 });
@@ -78,6 +78,24 @@ export const purchaserSchema = z.object({
   city: optionalText(100),
   productInterest: optionalText(180),
   purchaseStage: z.enum(["NEW", "CONTACTED", "QUOTED", "NEGOTIATION", "PURCHASED", "ON_HOLD", "LOST"]).default("NEW"),
+  expectedValue: z.coerce.number().min(0).optional().nullable(),
+  nextFollowupDate: dateString.optional().or(z.literal("")).default(""),
+  notes: optionalText(4000)
+});
+export const supplierCategorySchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  description: optionalText(1000)
+});
+export const supplierSchema = z.object({
+  categoryId: z.string().uuid(),
+  companyName: z.string().trim().min(1).max(180),
+  contactPerson: z.string().trim().min(1).max(150),
+  phone: optionalText(40),
+  whatsapp: optionalText(40),
+  email: optionalText(255),
+  city: optionalText(100),
+  productInterest: optionalText(180),
+  supplyStage: z.enum(["NEW", "CONTACTED", "QUOTED", "NEGOTIATION", "SUPPLIED", "ON_HOLD", "LOST"]).default("NEW"),
   expectedValue: z.coerce.number().min(0).optional().nullable(),
   nextFollowupDate: dateString.optional().or(z.literal("")).default(""),
   notes: optionalText(4000)

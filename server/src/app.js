@@ -13,6 +13,7 @@ import { followupsRouter } from "./routes/followups.js";
 import { remarksRouter } from "./routes/remarks.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { purchasersRouter } from "./routes/purchasers.js";
+import { suppliersRouter } from "./routes/suppliers.js";
 import { updatesRouter } from "./routes/updates.js";
 import { messagesRouter } from "./routes/messages.js";
 import { ssoRouter } from "./routes/sso.js";
@@ -52,6 +53,7 @@ app.use("/followups", followupsRouter);
 app.use("/remarks", remarksRouter);
 app.use("/dashboard", dashboardRouter);
 app.use("/purchasers", purchasersRouter);
+app.use("/suppliers", suppliersRouter);
 app.use("/updates", updatesRouter);
 app.use("/messages", messagesRouter);
 

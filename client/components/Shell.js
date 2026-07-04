@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Bell, ClipboardList, Crown, FileBarChart, LogOut, MessageSquareText, ShoppingBag, Sparkles, Target, Users } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, Crown, FileBarChart, LogOut, MessageSquareText, PackageCheck, ShoppingBag, Sparkles, Target, Users } from "lucide-react";
 import RouteTransition from "./RouteTransition";
 
 export default function Shell({ user, children }) {
@@ -11,6 +11,7 @@ export default function Shell({ user, children }) {
       { href: "/dashboard", label: "Daily workspace", icon: ClipboardList },
       { href: "/leads", label: "My leads", icon: Target },
       { href: "/purchasers", label: "Purchasers", icon: ShoppingBag },
+      { href: "/suppliers", label: "Suppliers", icon: PackageCheck },
       { href: "/messages", label: "Direct messages", icon: MessageSquareText },
       { href: "/updates", label: "Important updates", icon: Bell }
     ],
@@ -25,6 +26,7 @@ export default function Shell({ user, children }) {
       { href: "/dashboard", label: "Executive overview", icon: Crown },
       { href: "/leads", label: "All leads", icon: Target },
       { href: "/purchasers", label: "Purchasers", icon: ShoppingBag },
+      { href: "/suppliers", label: "Suppliers", icon: PackageCheck },
       { href: "/messages", label: "Direct messages", icon: MessageSquareText },
       { href: "/updates", label: "Important updates", icon: Bell },
       { href: "/reports", label: "Reports & remarks", icon: Users },

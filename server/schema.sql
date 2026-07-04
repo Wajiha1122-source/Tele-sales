@@ -17,8 +17,12 @@ DO $$ BEGIN
   CREATE TYPE remark_target AS ENUM ('LEAD', 'REPORT');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 ALTER TYPE remark_target ADD VALUE IF NOT EXISTS 'PURCHASER';
+ALTER TYPE remark_target ADD VALUE IF NOT EXISTS 'SUPPLIER';
 DO $$ BEGIN
   CREATE TYPE purchaser_stage AS ENUM ('NEW', 'CONTACTED', 'QUOTED', 'NEGOTIATION', 'PURCHASED', 'ON_HOLD', 'LOST');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE supplier_stage AS ENUM ('NEW', 'CONTACTED', 'QUOTED', 'NEGOTIATION', 'SUPPLIED', 'ON_HOLD', 'LOST');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE TYPE update_priority AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
@@ -180,6 +184,36 @@ CREATE TABLE IF NOT EXISTS purchasers (
 
 ALTER TABLE purchasers ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES purchaser_categories(id);
 
+CREATE TABLE IF NOT EXISTS supplier_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(120) NOT NULL UNIQUE,
+  description TEXT,
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS suppliers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_id UUID REFERENCES supplier_categories(id),
+  company_name VARCHAR(180) NOT NULL,
+  contact_person VARCHAR(150) NOT NULL,
+  phone VARCHAR(40),
+  whatsapp VARCHAR(40),
+  email VARCHAR(255),
+  city VARCHAR(100),
+  product_interest VARCHAR(180),
+  supply_stage supplier_stage NOT NULL DEFAULT 'NEW',
+  expected_value NUMERIC(12,2),
+  next_followup_date DATE,
+  notes TEXT,
+  created_by UUID NOT NULL REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES supplier_categories(id);
+
 CREATE TABLE IF NOT EXISTS important_updates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title VARCHAR(180) NOT NULL,
@@ -214,6 +248,10 @@ CREATE INDEX IF NOT EXISTS idx_purchaser_categories_name ON purchaser_categories
 CREATE INDEX IF NOT EXISTS idx_purchasers_category_updated ON purchasers(category_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_purchasers_stage_updated ON purchasers(purchase_stage, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_purchasers_created_by ON purchasers(created_by);
+CREATE INDEX IF NOT EXISTS idx_supplier_categories_name ON supplier_categories(name);
+CREATE INDEX IF NOT EXISTS idx_suppliers_category_updated ON suppliers(category_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_suppliers_stage_updated ON suppliers(supply_stage, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_suppliers_created_by ON suppliers(created_by);
 CREATE INDEX IF NOT EXISTS idx_important_updates_feed ON important_updates(pinned DESC, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_important_updates_audience ON important_updates(audience);
 CREATE INDEX IF NOT EXISTS idx_direct_messages_sender_recipient ON direct_messages(sender_id, recipient_id, created_at DESC);

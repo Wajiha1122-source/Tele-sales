@@ -73,7 +73,7 @@ Create two Vercel projects from this repository.
 - Root directory: `client`
 - Environment variable: `NEXT_PUBLIC_API_URL=https://your-api-project.vercel.app`
 
-Set API `CLIENT_URL` to the frontend Vercel URL. For preview deployments, add allowed origins as a comma-separated list.
+Set API `CLIENT_URL` to the frontend Vercel URL, for example `https://your-frontend.vercel.app`. SSO uses the first URL in `CLIENT_URL` as the browser redirect target, so do not leave it as `http://localhost:3000` in Render production.
 
 ## API
 

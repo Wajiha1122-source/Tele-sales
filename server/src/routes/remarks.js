@@ -12,7 +12,8 @@ remarksRouter.post("/add", authorize("CEO"), validate(remarkSchema), asyncHandle
     const tables = {
       LEAD: "leads",
       REPORT: "daily_reports",
-      PURCHASER: "purchasers"
+      PURCHASER: "purchasers",
+      SUPPLIER: "suppliers"
     };
     const table = tables[b.targetType];
     const exists = await client.query(`SELECT id FROM ${table} WHERE id=$1`, [b.targetId]);
