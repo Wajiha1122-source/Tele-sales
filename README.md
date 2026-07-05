@@ -65,7 +65,7 @@ Create two Vercel projects from this repository.
 ### API project
 
 - Root directory: `server`
-- Environment variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_URL`, `BOOTSTRAP_ADMIN_KEY`, `SSO_SECRET`, `SSO_APP_NAME`, `SSO_LOCAL_CEO_USERNAME`, `SSO_REDIRECT_PATH`
+- Environment variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_URL`, `BOOTSTRAP_ADMIN_KEY`, `SSO_SECRET`, `SSO_MASTER_USER`, `SSO_MASTER_ROLE`, `SSO_APP_NAME`, `SSO_LOCAL_CEO_USERNAME`, `SSO_REDIRECT_PATH`
 - Run the schema once against Neon with `npm run db:migrate -w server` locally or in a protected CI job.
 
 ### Frontend project
@@ -74,6 +74,8 @@ Create two Vercel projects from this repository.
 - Environment variable: `NEXT_PUBLIC_API_URL=https://your-api-project.vercel.app`
 
 Set API `CLIENT_URL` to the frontend Vercel URL, for example `https://your-frontend.vercel.app`. SSO uses the first URL in `CLIENT_URL` as the browser redirect target, so do not leave it as `http://localhost:3000` in Render production.
+
+For SSO, `SSO_MASTER_USER` and `SSO_MASTER_ROLE` must match the signed values sent by the Master Dashboard token. `SSO_LOCAL_CEO_USERNAME` must be an active local user in this app with role `CEO`; otherwise `/sso-login` will reject the handoff.
 
 ## API
 

@@ -5,9 +5,6 @@ import { config } from "../config.js";
 import { asyncHandler, AppError } from "../lib/http.js";
 import { createSessionPayload, createSessionToken } from "../lib/session.js";
 
-const MASTER_USER = "chmfj@live.com";
-const MASTER_ROLE = "ceo";
-
 export const ssoRouter = Router();
 
 function fail(message, status = 401) {
@@ -39,20 +36,24 @@ ssoRouter.get("/", asyncHandler(async (req, res) => {
   }
 
   if (!payload.exp) fail("invalid or expired token.");
-  if (payload.masterUser !== MASTER_USER) fail("unauthorized user.", 403);
-  if (payload.role !== MASTER_ROLE) fail("unauthorized role.", 403);
+  const masterUser = String(payload.masterUser || "").trim().toLowerCase();
+  const masterRole = String(payload.role || "").trim().toLowerCase();
+
+  if (masterUser !== config.sso.masterUser) fail("unauthorized user.", 403);
+  if (masterRole !== config.sso.masterRole) fail("unauthorized role.", 403);
   if (payload.app !== config.sso.appName) fail("app mismatch.", 403);
 
   const { rows } = await query(
     `SELECT id,name,email,role,is_active
        FROM users
-      WHERE LOWER(email)=LOWER($1)
-        AND role='CEO'
-      LIMIT 1`,
+       WHERE LOWER(email)=LOWER($1)
+       LIMIT 1`,
     [config.sso.localCeoUsername]
   );
   const user = rows[0];
-  if (!user || !user.is_active) fail("mapped CEO/admin user is unavailable.", 403);
+  if (!user) fail("mapped CEO/admin user does not exist.", 403);
+  if (user.role !== "CEO") fail("mapped CEO/admin user is not a CEO account.", 403);
+  if (!user.is_active) fail("mapped CEO/admin user is inactive.", 403);
 
   const appToken = createSessionToken(user);
   const sessionUser = encodeURIComponent(JSON.stringify(createSessionPayload(user)));

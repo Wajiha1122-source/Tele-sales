@@ -16,6 +16,9 @@ const configuredClientUrls = (process.env.CLIENT_URL || "")
   .map((url) => url.trim())
   .filter(Boolean);
 
+const normalizeText = (value, fallback = "") => (value || fallback).trim();
+const normalizeEmail = (value, fallback = "") => normalizeText(value, fallback).toLowerCase();
+
 export const config = {
   port: Number(process.env.PORT || 5000),
   databaseUrl: process.env.DATABASE_URL,
@@ -30,11 +33,15 @@ export const config = {
   sso: {
     // Change SSO_SECRET in the environment when rotating the Master Dashboard shared secret.
     secret: process.env.SSO_SECRET,
+    // Change SSO_MASTER_USER if the Master Dashboard sends a different signed master user.
+    masterUser: normalizeEmail(process.env.SSO_MASTER_USER, "chmfj@live.com"),
+    // Change SSO_MASTER_ROLE if the Master Dashboard sends a different signed role.
+    masterRole: normalizeText(process.env.SSO_MASTER_ROLE, "ceo").toLowerCase(),
     // Change SSO_APP_NAME to the exact app value sent by the Master Dashboard.
-    appName: process.env.SSO_APP_NAME || "Pulse CRM",
+    appName: normalizeText(process.env.SSO_APP_NAME, "Pulse CRM"),
     // Change SSO_LOCAL_CEO_USERNAME to the mapped local CEO/admin user's email.
-    localCeoUsername: process.env.SSO_LOCAL_CEO_USERNAME || "chmfj@live.com",
+    localCeoUsername: normalizeEmail(process.env.SSO_LOCAL_CEO_USERNAME, "chmfj@live.com"),
     // Change SSO_REDIRECT_PATH to the CEO/admin dashboard path after SSO login.
-    redirectPath: process.env.SSO_REDIRECT_PATH || "/dashboard"
+    redirectPath: normalizeText(process.env.SSO_REDIRECT_PATH, "/dashboard")
   }
 };
