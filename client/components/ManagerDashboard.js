@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Clock3, Flame, Target, TrendingUp } from "lucide-react";
+import { ArrowRight, Clock3, Flame, Target, TrendingUp, Users } from "lucide-react";
 import { api } from "../lib/api";
 import { Card, Notice, Status } from "./ui";
 import Reveal from "./Reveal";
@@ -31,6 +31,7 @@ export default function ManagerDashboard() {
     { label: "In negotiation", value: leads.filter((lead) => lead.status === "NEGOTIATION").length, icon: TrendingUp, tone: "from-indigo-600 to-blue-700" },
     { label: "No follow-up yet", value: allWithoutFollowup.length, icon: Clock3, tone: "from-purple-700 to-fuchsia-700" }
   ];
+  const executives = data.performance || [];
 
   return <>
     <Reveal variant="clip"><header className="relative mb-8 overflow-hidden rounded-[2rem] border border-violet-200 bg-gradient-to-br from-white via-violet-50 to-fuchsia-50 p-7 shadow-card md:p-8">
@@ -63,5 +64,15 @@ export default function ManagerDashboard() {
         <button onClick={() => router.push("/leads")} className="btn-primary mt-6 w-full">Manage lead pipeline <ArrowRight size={17} /></button>
       </Card></Reveal>
     </div>
+
+    <Reveal className="mt-5"><Card title="Executive performance - last 30 days" action={<span className="inline-flex items-center gap-1 text-xs font-semibold text-violet-500"><Users size={14} />{executives.length} executives</span>}>
+      <div className="ceo-table-scroll w-full max-w-full overflow-x-auto">
+        <table className="min-w-[34rem] w-full">
+          <thead><tr><th>Executive</th><th>Reports</th><th>Calls</th><th>Contacts</th><th>Leads</th></tr></thead>
+          <tbody>{executives.map((person) => <tr key={person.id}><td className="font-bold text-violet-950">{person.name}</td><td>{person.reports}</td><td>{person.calls}</td><td>{person.contacts}</td><td>{person.leads}</td></tr>)}</tbody>
+        </table>
+      </div>
+      {!executives.length && <div className="rounded-2xl bg-violet-50 p-6 text-sm text-slate-500">No executive activity has been logged yet.</div>}
+    </Card></Reveal>
   </>;
 }
