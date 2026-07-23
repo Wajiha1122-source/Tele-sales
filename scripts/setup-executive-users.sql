@@ -27,7 +27,7 @@ updated_ahmad AS (
   SET
     name = 'Ahmad',
     email = LOWER('ahmad@tele-sales.com'),
-    password_hash = '$2b$12$VZCxI8mUFmGkkWVYw8dS8OmLmv9P/.qXvtT15w513r1WTJXfrsxqO',
+    password_hash = '$2b$12$rvJaGgx.ufpiKlAAisP1Lu9KPpOFqF2kVLRDdxPM6R3V6MBn5Fu5q',
     role = 'EXECUTIVE',
     is_active = TRUE
   WHERE id = (SELECT id FROM ahmad_target)
@@ -37,7 +37,7 @@ INSERT INTO users (name, email, password_hash, role, is_active)
 SELECT
   'Ahmad',
   LOWER('ahmad@tele-sales.com'),
-  '$2b$12$VZCxI8mUFmGkkWVYw8dS8OmLmv9P/.qXvtT15w513r1WTJXfrsxqO',
+  '$2b$12$rvJaGgx.ufpiKlAAisP1Lu9KPpOFqF2kVLRDdxPM6R3V6MBn5Fu5q',
   'EXECUTIVE',
   TRUE
 WHERE NOT EXISTS (SELECT 1 FROM updated_ahmad)
@@ -52,7 +52,7 @@ INSERT INTO users (name, email, password_hash, role, is_active)
 VALUES (
   'Laiba',
   LOWER('laiba@tele-sales.com'),
-  '$2b$12$o0n7zk2/Yfd7yY6kz2QsG.DKomTzYfZt7beXVzoj4KhUes6pvd.jW',
+  '$2b$12$3oFEJZKOgTbDpzU.BY7sjuL35U3EuRWkOGjUO1ofe7go8uAoKmoX6',
   'EXECUTIVE',
   TRUE
 )
