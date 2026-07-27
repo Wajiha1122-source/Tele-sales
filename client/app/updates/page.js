@@ -8,7 +8,7 @@ import { api, titleize } from "../../lib/api";
 import { useSession } from "../../hooks/useSession";
 
 const priorities = ["LOW", "NORMAL", "HIGH", "URGENT"];
-const audiences = ["ALL", "EXECUTIVE", "MANAGER", "CEO"];
+const audiences = ["ALL", "EXECUTIVE", "MANAGER", "SALES_DIRECTOR", "CEO"];
 const emptyForm = { title: "", body: "", priority: "NORMAL", audience: "ALL", pinned: false };
 
 export default function UpdatesPage() {

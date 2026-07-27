@@ -22,6 +22,10 @@ export default function Shell({ user, children }) {
       { href: "/updates", label: "Important updates", icon: Bell },
       { href: "/report-center", label: "Generate report", icon: FileBarChart }
     ],
+    SALES_DIRECTOR: [
+      { href: "/dashboard", label: "Sales director", icon: BarChart3 },
+      { href: "/updates", label: "Important updates", icon: Bell }
+    ],
     CEO: [
       { href: "/dashboard", label: "Executive overview", icon: Crown },
       { href: "/leads", label: "All leads", icon: Target },
@@ -42,7 +46,7 @@ export default function Shell({ user, children }) {
         <nav className="flex gap-2 overflow-auto lg:min-h-0 lg:flex-1 lg:block lg:space-y-2 lg:pr-1">
           {links.map(({ href, label, icon: Icon }) => <button key={href} onClick={() => router.push(href)} className={`sidebar-link group flex min-w-fit items-center gap-3 rounded-xl px-3 py-3 text-sm lg:w-full ${pathname === href || (href === "/leads" && pathname.startsWith("/leads/")) ? "bg-white text-violet-950 shadow-lg shadow-black/10" : "text-violet-100/70 hover:bg-white/10 hover:text-white"}`}><span className="transition duration-200 group-hover:scale-125 group-hover:rotate-3"><Icon size={18} /></span>{label}</button>)}
         </nav>
-        <div className="mt-5 hidden shrink-0 rounded-2xl border border-white/10 bg-white/5 p-4 lg:block"><Sparkles size={18} className="mb-3 text-fuchsia-300" /><p className="text-xs leading-5 text-violet-100/60">{user.role === "MANAGER" ? "Move every lead forward with a clear follow-up and status." : user.role === "CEO" ? "Review performance and add immutable leadership remarks." : "Log the day in under two minutes."}</p></div>
+        <div className="mt-5 hidden shrink-0 rounded-2xl border border-white/10 bg-white/5 p-4 lg:block"><Sparkles size={18} className="mb-3 text-fuchsia-300" /><p className="text-xs leading-5 text-violet-100/60">{user.role === "MANAGER" ? "Move every lead forward with a clear follow-up and status." : user.role === "SALES_DIRECTOR" ? "Track executive performance and activity as it happens." : user.role === "CEO" ? "Review performance and add immutable leadership remarks." : "Log the day in under two minutes."}</p></div>
         <div className="mt-5 shrink-0 border-t border-white/10 pt-5">
           <div className="mb-3"><div className="text-sm font-semibold">{user.name}</div><div className="text-xs text-white/50">{user.role}</div></div>
           <button onClick={logout} className="flex items-center gap-2 text-sm text-white/60 hover:text-white"><LogOut size={16} />Sign out</button>

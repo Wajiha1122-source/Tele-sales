@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const roles = ["EXECUTIVE", "MANAGER", "CEO"];
+export const roles = ["EXECUTIVE", "MANAGER", "SALES_DIRECTOR", "CEO"];
 export const statuses = ["NEW", "CONTACTED", "IN_PROGRESS", "PROPOSAL_SENT", "NEGOTIATION", "CONVERTED", "LOST", "NO_RESPONSE"];
 const optionalText = (max) => z.preprocess(
   (value) => typeof value === "string" ? value.trim() : value,
@@ -104,7 +104,7 @@ export const updateSchema = z.object({
   title: z.string().trim().min(1).max(180),
   body: z.string().trim().min(1).max(4000),
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
-  audience: z.enum(["ALL", "EXECUTIVE", "MANAGER", "CEO"]).default("ALL"),
+  audience: z.enum(["ALL", "EXECUTIVE", "MANAGER", "SALES_DIRECTOR", "CEO"]).default("ALL"),
   pinned: z.boolean().optional().default(false)
 });
 export const directMessageSchema = z.object({

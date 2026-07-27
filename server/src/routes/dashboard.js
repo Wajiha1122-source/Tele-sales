@@ -5,7 +5,7 @@ import { authorize } from "../middleware/auth.js";
 
 export const dashboardRouter = Router();
 
-dashboardRouter.get("/summary", authorize("MANAGER", "CEO"), asyncHandler(async (_req, res) => {
+dashboardRouter.get("/summary", authorize("MANAGER", "SALES_DIRECTOR", "CEO"), asyncHandler(async (_req, res) => {
   const [leadStats, reportsToday, performance] = await Promise.all([
     query(`SELECT COUNT(*)::int total,
       COUNT(*) FILTER(WHERE status='NEW')::int new,

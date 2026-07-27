@@ -45,7 +45,7 @@ activitiesRouter.get("/my-today", authorize("EXECUTIVE"), asyncHandler(async (re
   res.json(rows);
 }));
 
-activitiesRouter.get("/all", authorize("CEO"), asyncHandler(async (req, res) => {
+activitiesRouter.get("/all", authorize("SALES_DIRECTOR", "CEO"), asyncHandler(async (req, res) => {
   const rows = await transaction(async (client) => {
     const recent = await client.query(
       `SELECT a.id
@@ -56,13 +56,15 @@ activitiesRouter.get("/all", authorize("CEO"), asyncHandler(async (req, res) => 
     const ids = recent.rows.map((row) => row.id);
     if (!ids.length) return [];
 
-    await client.query(
-      `UPDATE daily_activities
-       SET ceo_viewed_at=COALESCE(ceo_viewed_at,NOW()),
-           ceo_viewed_by=COALESCE(ceo_viewed_by,$1)
-       WHERE id=ANY($2::uuid[])`,
-      [req.user.id, ids]
-    );
+    if (req.user.role === "CEO") {
+      await client.query(
+        `UPDATE daily_activities
+         SET ceo_viewed_at=COALESCE(ceo_viewed_at,NOW()),
+             ceo_viewed_by=COALESCE(ceo_viewed_by,$1)
+         WHERE id=ANY($2::uuid[])`,
+        [req.user.id, ids]
+      );
+    }
     const result = await client.query(
       `SELECT a.*,u.name executive_name,r.id AS report_id,
          (r.id IS NOT NULL) AS report_submitted
@@ -79,7 +81,7 @@ activitiesRouter.get("/all", authorize("CEO"), asyncHandler(async (req, res) => 
 }));
 
 activitiesRouter.get("/by-report/:id", asyncHandler(async (req, res) => {
-  if (!["EXECUTIVE", "CEO"].includes(req.user.role)) {
+  if (!["EXECUTIVE", "SALES_DIRECTOR", "CEO"].includes(req.user.role)) {
     throw new AppError(403, "Insufficient permissions");
   }
   const ownerCheck = req.user.role === "EXECUTIVE" ? "AND r.executive_id=$2" : "";
